@@ -1,0 +1,1376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Operation: Dictator Files — Vocabulary Game</title>
+  <link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Oswald:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    /* ═══════════════════════════════════════
+       RESET & CORK BOARD
+    ═══════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      background-color: #7a5230;
+      background-image:
+        radial-gradient(ellipse at 15% 60%, rgba(100,62,30,0.7) 0%, transparent 55%),
+        radial-gradient(ellipse at 85% 25%, rgba(90,55,20,0.5) 0%, transparent 45%),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.18'/%3E%3C/svg%3E");
+      font-family: 'Special Elite', cursive;
+      color: #1a1a1a;
+      padding: 16px 12px 40px;
+    }
+
+    /* ═══════════════════════════════════════
+       SCORE TICKER (fixed)
+    ═══════════════════════════════════════ */
+    #score-ticker {
+      position: fixed;
+      top: 10px; right: 12px;
+      background: #1e110a;
+      border: 2px solid #8B0000;
+      color: #c8a96e;
+      font-family: 'Oswald', sans-serif;
+      font-size: 13px;
+      padding: 5px 12px;
+      letter-spacing: 2px;
+      z-index: 100;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    }
+    #score-ticker .sv { color: #e8c840; }
+
+    /* ═══════════════════════════════════════
+       HEADER
+    ═══════════════════════════════════════ */
+    #hdr {
+      text-align: center;
+      margin-bottom: 18px;
+    }
+    .ts-stamp {
+      display: inline-block;
+      font-family: 'Oswald', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 5px;
+      color: #cc0000;
+      border: 3px solid #cc0000;
+      padding: 3px 10px;
+      transform: rotate(-2deg);
+      opacity: 0.88;
+      margin-bottom: 6px;
+    }
+    #hdr h1 {
+      font-family: 'Oswald', sans-serif;
+      font-size: clamp(20px, 4.5vw, 36px);
+      color: #f5e6c8;
+      text-shadow: 2px 3px 6px rgba(0,0,0,0.7);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+    }
+    #hdr .sub {
+      color: #c8a870;
+      font-size: 13px;
+      margin-top: 3px;
+      letter-spacing: 1px;
+    }
+
+    /* ═══════════════════════════════════════
+       PROGRESS
+    ═══════════════════════════════════════ */
+    #prog-wrap { max-width: 820px; margin: 0 auto 16px; }
+    #prog-lbl {
+      font-family: 'Oswald', sans-serif;
+      font-size: 11px;
+      letter-spacing: 3px;
+      color: #c8a870;
+      text-align: center;
+      margin-bottom: 4px;
+    }
+    #prog-track {
+      height: 10px;
+      background: rgba(0,0,0,0.35);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    #prog-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #7a0000, #cc2200);
+      transition: width 0.6s ease;
+    }
+
+    /* ═══════════════════════════════════════
+       PHASE BANNER
+    ═══════════════════════════════════════ */
+    #phase-banner {
+      max-width: 820px;
+      margin: 0 auto 18px;
+      background: #1e110a;
+      border: 1px solid #5a3a1a;
+      border-top: 4px solid #8B0000;
+      padding: 8px 18px;
+      text-align: center;
+    }
+    #pb-label {
+      font-family: 'Oswald', sans-serif;
+      font-size: 10px;
+      letter-spacing: 4px;
+      color: #8B6914;
+      text-transform: uppercase;
+    }
+    #pb-title {
+      font-family: 'Oswald', sans-serif;
+      font-size: clamp(14px, 3vw, 20px);
+      color: #f5e6c8;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 2px;
+    }
+
+    /* ═══════════════════════════════════════
+       MANILA CARD BASE
+    ═══════════════════════════════════════ */
+    .manila {
+      background: #f4e4c0;
+      border: 1px solid #c4a468;
+      box-shadow: 3px 5px 14px rgba(0,0,0,0.45);
+      padding: 18px;
+      position: relative;
+    }
+    .manila::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+      background: #8B0000;
+    }
+
+    /* ═══════════════════════════════════════
+       TWO-COLUMN LAYOUT
+    ═══════════════════════════════════════ */
+    #game-cols {
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      gap: 18px;
+      align-items: flex-start;
+    }
+    #q-col { flex: 1.3; min-width: 0; }
+    #p-col { flex: 0 0 240px; }
+    @media(max-width:620px){
+      #game-cols { flex-direction: column; }
+      #p-col { flex: none; width: 100%; }
+    }
+
+    /* ═══════════════════════════════════════
+       QUESTION CARD
+    ═══════════════════════════════════════ */
+    .card-top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      border-bottom: 1px dashed #c4a468;
+      padding-bottom: 6px;
+      margin-bottom: 10px;
+    }
+    .card-lbl {
+      font-family: 'Oswald', sans-serif;
+      font-size: 10px;
+      letter-spacing: 3px;
+      color: #7a3a10;
+      text-transform: uppercase;
+    }
+    #q-counter {
+      font-family: 'Oswald', sans-serif;
+      font-size: 11px;
+      color: #888;
+    }
+    #q-def {
+      font-size: 14px;
+      line-height: 1.65;
+      color: #1e110a;
+      background: rgba(255,255,255,0.28);
+      border-left: 3px solid #7a3a10;
+      padding: 8px 12px;
+      margin-bottom: 16px;
+      min-height: 68px;
+    }
+
+    /* ═══════════════════════════════════════
+       ANSWER BUTTONS
+    ═══════════════════════════════════════ */
+    #ans-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 7px;
+      margin-bottom: 12px;
+    }
+    .ans-btn {
+      background: #e6d09e;
+      border: 2px solid #c4a468;
+      color: #1e110a;
+      font-family: 'Special Elite', cursive;
+      font-size: 13px;
+      padding: 9px 11px;
+      cursor: pointer;
+      text-align: left;
+      line-height: 1.3;
+      transition: background 0.12s, transform 0.12s, box-shadow 0.12s;
+    }
+    .ans-btn:hover:not(:disabled){
+      background: #d4b87a;
+      border-color: #7a3a10;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.22);
+    }
+    .ans-btn.correct { background:#264d14; border-color:#1a3a0a; color:#9de06a; cursor:default; }
+    .ans-btn.wrong   { background:#4d1414; border-color:#3a0a0a; color:#e07a7a; cursor:default; }
+    .ans-btn:disabled { cursor:default; }
+
+    /* ═══════════════════════════════════════
+       FEEDBACK
+    ═══════════════════════════════════════ */
+    #feedback {
+      font-size: 12.5px;
+      line-height: 1.5;
+      padding: 7px 10px;
+      min-height: 36px;
+      transition: opacity 0.25s;
+      opacity: 0;
+      border-radius: 2px;
+      margin-bottom: 8px;
+    }
+    #feedback.ok  { opacity:1; background:rgba(38,77,20,0.15); border:1px solid #264d14; color:#1a3a0a; }
+    #feedback.bad { opacity:1; background:rgba(77,20,20,0.15); border:1px solid #4d1414; color:#3a0a0a; }
+
+    /* ═══════════════════════════════════════
+       TALLY DOTS
+    ═══════════════════════════════════════ */
+    #tally { display:flex; gap:4px; flex-wrap:wrap; }
+    .tdot {
+      width:12px; height:12px; border-radius:50%;
+      border:1px solid #c4a468; background:#d4b87a;
+      transition:background 0.3s;
+    }
+    .tdot.c { background:#264d14; border-color:#1a3a0a; }
+    .tdot.w { background:#4d1414; border-color:#3a0a0a; }
+
+    /* ═══════════════════════════════════════
+       PROFILE CARD
+    ═══════════════════════════════════════ */
+    #profile-card { overflow:hidden; }
+    .pc-hdr {
+      text-align:center;
+      border-bottom:1px dashed #c4a468;
+      padding-bottom:8px;
+      margin-bottom:10px;
+    }
+    .pc-file-lbl {
+      font-family:'Oswald',sans-serif;
+      font-size:9px; letter-spacing:3px;
+      color:#7a3a10; text-transform:uppercase;
+    }
+    #pc-name {
+      font-family:'Oswald',sans-serif;
+      font-size:16px; text-transform:uppercase;
+      letter-spacing:1px; color:#1e110a;
+      line-height:1.2; margin-top:2px;
+    }
+    #photo-wrap {
+      width:90px; height:108px;
+      margin:0 auto 10px;
+      border:3px solid #7a3a10;
+      background:#d4b87a;
+      overflow:hidden; position:relative;
+    }
+    #photo-wrap img {
+      width:100%; height:100%;
+      object-fit:cover; object-position:top center;
+      filter:sepia(30%) contrast(112%);
+    }
+    .photo-ph {
+      width:100%; height:100%;
+      display:flex; align-items:center; justify-content:center;
+      font-size:38px; color:#7a3a10;
+    }
+    #pc-facts { list-style:none; min-height:60px; }
+    #pc-facts li {
+      font-size:11px; color:#1e110a;
+      padding:3px 0 3px 13px;
+      border-bottom:1px dotted #c4a468;
+      position:relative;
+      animation:fIn 0.45s ease;
+      line-height:1.4;
+    }
+    #pc-facts li::before { content:'▸'; position:absolute; left:0; color:#7a3a10; }
+    @keyframes fIn { from{opacity:0;transform:translateX(-8px)} to{opacity:1;transform:none} }
+    .eslot {
+      height:22px;
+      background:rgba(122,58,16,0.07);
+      border-bottom:1px dotted #c4a468;
+    }
+    /* PROFILED stamp on card */
+    #profiled-stamp {
+      position:absolute; top:50%; left:50%;
+      transform:translate(-50%,-50%) rotate(-14deg) scale(0);
+      font-family:'Oswald',sans-serif; font-size:20px; font-weight:700;
+      letter-spacing:3px; color:#cc0000;
+      border:4px solid #cc0000; padding:7px 12px;
+      text-align:center; line-height:1.2;
+      background:rgba(255,255,255,0.88);
+      z-index:10; pointer-events:none; opacity:0;
+      transition:all 0.55s cubic-bezier(0.175,0.885,0.32,1.275);
+      white-space:nowrap;
+    }
+    #profiled-stamp.on { opacity:0.9; transform:translate(-50%,-50%) rotate(-14deg) scale(1); }
+
+    /* ═══════════════════════════════════════
+       PROFILE CARD PULSE
+    ═══════════════════════════════════════ */
+    @keyframes pcPulse {
+      0%   { box-shadow: 3px 5px 14px rgba(0,0,0,0.45); }
+      50%  { box-shadow: 0 0 0 8px rgba(232,200,64,0.35), 3px 5px 14px rgba(0,0,0,0.45); }
+      100% { box-shadow: 3px 5px 14px rgba(0,0,0,0.45); }
+    }
+    .pc-pulse { animation: pcPulse 0.7s ease-out; }
+
+    /* ═══════════════════════════════════════
+       PHASE COMPLETE SCREEN
+    ═══════════════════════════════════════ */
+    #phase-cmp {
+      display:none; max-width:820px; margin:0 auto;
+    }
+    .pcmp-card {
+      background:#f4e4c0; border:2px solid #c4a468;
+      box-shadow:4px 7px 22px rgba(0,0,0,0.5);
+      padding:28px 24px; text-align:center; position:relative;
+    }
+    .pcmp-card::before { content:''; position:absolute; top:0;left:0;right:0;height:6px;background:#8B0000; }
+    .pcmp-stamp-text {
+      display:inline-block;
+      font-family:'Oswald',sans-serif; font-weight:700;
+      font-size:clamp(16px,3.5vw,26px);
+      letter-spacing:4px; color:#cc0000;
+      border:4px solid #cc0000; padding:7px 18px;
+      transform:rotate(-3deg); background:rgba(255,255,255,0.5);
+      margin-bottom:16px;
+    }
+    #pcmp-photo {
+      width:110px; height:140px; object-fit:cover; object-position:top center;
+      border:4px solid #7a3a10; filter:sepia(40%) contrast(110%);
+      display:block; margin:0 auto 14px;
+    }
+    #pcmp-name {
+      font-family:'Oswald',sans-serif; font-size:clamp(18px,3.5vw,28px);
+      text-transform:uppercase; letter-spacing:2px; color:#1e110a;
+      margin-bottom:10px;
+    }
+    #pcmp-summary {
+      font-size:13.5px; line-height:1.75; color:#3a2a1a;
+      max-width:520px; margin:0 auto 22px;
+      text-align:left; background:rgba(255,255,255,0.25);
+      border-left:3px solid #7a3a10; padding:10px 14px;
+    }
+    .next-btn {
+      font-family:'Oswald',sans-serif; font-size:15px; font-weight:700;
+      letter-spacing:3px; text-transform:uppercase;
+      background:#8B0000; color:#f5e6c8;
+      border:3px solid #5a0000; padding:12px 26px;
+      cursor:pointer; transition:all 0.18s;
+    }
+    .next-btn:hover { background:#cc0000; transform:translateY(-2px); box-shadow:0 5px 14px rgba(139,0,0,0.45); }
+
+    /* ═══════════════════════════════════════
+       WIN SCREEN
+    ═══════════════════════════════════════ */
+    #win-screen {
+      display:none; max-width:820px; margin:0 auto;
+    }
+    .win-card {
+      background:#1e110a; border:3px solid #8B0000;
+      box-shadow:0 0 40px rgba(139,0,0,0.4);
+      padding:28px 22px; text-align:center;
+    }
+    .win-title {
+      font-family:'Oswald',sans-serif;
+      font-size:clamp(18px,4vw,30px);
+      color:#cc0000; text-transform:uppercase;
+      letter-spacing:4px; margin-bottom:6px;
+    }
+    .win-sub { font-size:13px; color:#c8a870; margin-bottom:20px; }
+    .win-lbl {
+      font-family:'Oswald',sans-serif; font-size:10px;
+      letter-spacing:4px; color:#7a5520; margin-bottom:4px;
+    }
+    #win-score-val {
+      display:inline-block; background:#8B0000; color:#f5e6c8;
+      font-family:'Oswald',sans-serif; font-size:26px;
+      padding:10px 28px; letter-spacing:2px; margin-bottom:18px;
+    }
+    #win-breakdown {
+      display:flex; justify-content:center; gap:16px;
+      flex-wrap:wrap; margin-bottom:18px;
+    }
+    .sitem {
+      background:rgba(245,228,192,0.08); border:1px solid #7a3a10;
+      padding:8px 16px; text-align:center;
+    }
+    .sitem-n { font-family:'Oswald',sans-serif; font-size:22px; color:#f5e6c8; }
+    .sitem-l { font-size:10px; color:#7a5520; font-family:'Oswald',sans-serif; letter-spacing:1px; }
+    #win-stamps { margin:10px 0 18px; }
+    .wstamp {
+      display:inline-block;
+      font-family:'Oswald',sans-serif; font-size:14px; font-weight:700;
+      letter-spacing:3px; color:#cc0000;
+      border:3px solid #cc0000; padding:5px 14px;
+      opacity:0.85; margin:4px 6px;
+    }
+    #win-profiles {
+      display:flex; justify-content:center;
+      gap:14px; flex-wrap:wrap; margin-bottom:18px;
+    }
+    .wpt { text-align:center; background:rgba(245,228,192,0.06); border:1px solid #7a3a10; padding:8px; }
+    .wpt img {
+      width:64px; height:78px; object-fit:cover; object-position:top center;
+      filter:sepia(40%) contrast(110%); border:2px solid #7a3a10;
+      display:block; margin:0 auto 5px;
+    }
+    .wpt-ph { width:64px; height:78px; background:#333; display:flex; align-items:center; justify-content:center; color:#999; font-size:28px; margin:0 auto 5px; }
+    .wpt-name { font-family:'Oswald',sans-serif; font-size:10px; color:#c8a870; letter-spacing:1px; }
+    .wpt-tag { font-family:'Oswald',sans-serif; font-size:9px; color:#cc0000; letter-spacing:1px; margin-top:2px; }
+    #win-vocab { max-width:540px; margin:16px auto; text-align:left; }
+    #win-vocab-lbl {
+      font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:3px;
+      color:#7a5520; margin-bottom:8px;
+    }
+    .vrev-item {
+      font-size:11.5px; color:#c8a870; margin-bottom:5px;
+      padding:4px 8px; border-left:2px solid #8B0000; line-height:1.5;
+    }
+    .vrev-item strong { color:#f5e6c8; }
+    .play-again {
+      font-family:'Oswald',sans-serif; font-size:14px; font-weight:700;
+      letter-spacing:3px; text-transform:uppercase;
+      background:transparent; color:#f5e6c8;
+      border:2px solid #f5e6c8; padding:10px 22px;
+      cursor:pointer; transition:all 0.18s; margin-top:16px;
+    }
+    .play-again:hover { background:rgba(245,228,192,0.1); box-shadow:0 0 12px rgba(245,228,192,0.2); }
+
+    /* ═══════════════════════════════════════
+       RETRY SCREEN
+    ═══════════════════════════════════════ */
+    #retry-screen { display:none; max-width:820px; margin:0 auto; }
+    .retry-card {
+      background:#f4e4c0; border:2px solid #c4a468;
+      box-shadow:4px 7px 22px rgba(0,0,0,0.5);
+      padding:28px 24px; text-align:center; position:relative;
+    }
+    .retry-card::before { content:''; position:absolute; top:0;left:0;right:0;height:6px;background:#8B0000; }
+    .retry-stamp-txt {
+      display:inline-block;
+      font-family:'Oswald',sans-serif; font-weight:700;
+      font-size:clamp(15px,3.5vw,24px); letter-spacing:4px;
+      color:#8B0000; border:4px solid #8B0000; padding:7px 18px;
+      transform:rotate(-3deg); background:rgba(255,255,255,0.5); margin-bottom:16px;
+    }
+    .retry-title {
+      font-family:'Oswald',sans-serif; font-size:clamp(15px,3vw,21px);
+      color:#1e110a; letter-spacing:1px; margin-bottom:10px;
+    }
+    .retry-score-line {
+      font-size:13px; color:#3a2a1a; line-height:1.6;
+      background:rgba(255,255,255,0.28); padding:10px 14px;
+      border-left:3px solid #8B0000; max-width:400px;
+      margin:0 auto 18px; text-align:left;
+    }
+    .retry-missed-lbl {
+      font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:3px;
+      color:#7a3a10; text-align:left; max-width:400px; margin:0 auto 5px;
+    }
+    #retry-missed { list-style:none; max-width:400px; margin:0 auto 22px; text-align:left; }
+    #retry-missed li {
+      font-size:12.5px; color:#4d1414;
+      padding:4px 0 4px 16px; border-bottom:1px dotted #c4a468; position:relative;
+      line-height:1.4;
+    }
+    #retry-missed li::before { content:'✗'; position:absolute; left:0; color:#8B0000; font-weight:700; }
+    .retry-btn {
+      font-family:'Oswald',sans-serif; font-size:15px; font-weight:700;
+      letter-spacing:3px; text-transform:uppercase;
+      background:#8B0000; color:#f5e6c8; border:3px solid #5a0000;
+      padding:12px 26px; cursor:pointer; transition:all 0.18s;
+    }
+    .retry-btn:hover { background:#cc0000; transform:translateY(-2px); box-shadow:0 5px 14px rgba(139,0,0,0.45); }
+
+    /* ═══════════════════════════════════════
+       OPINION SCREEN
+    ═══════════════════════════════════════ */
+    #opinion-screen { display:none; max-width:820px; margin:0 auto; }
+    .opinion-card {
+      background:#f4e4c0; border:2px solid #c4a468;
+      box-shadow:4px 7px 22px rgba(0,0,0,0.5);
+      padding:28px 24px; position:relative;
+    }
+    .opinion-card::before { content:''; position:absolute; top:0;left:0;right:0;height:6px;background:#8B0000; }
+    .opinion-top-stamp {
+      display:inline-block;
+      font-family:'Oswald',sans-serif; font-size:10px; font-weight:700;
+      letter-spacing:5px; color:#cc0000; border:2px solid #cc0000;
+      padding:3px 10px; transform:rotate(-2deg); opacity:0.87; margin-bottom:14px;
+    }
+    .opinion-title {
+      font-family:'Oswald',sans-serif; font-size:clamp(16px,3.5vw,24px);
+      text-transform:uppercase; letter-spacing:2px; color:#1e110a; margin-bottom:8px;
+      text-align:center;
+    }
+    .opinion-prompt {
+      font-size:14px; line-height:1.8; color:#1e110a;
+      background:rgba(255,255,255,0.28); border-left:3px solid #7a3a10;
+      padding:12px 14px; margin-bottom:6px;
+    }
+    .opinion-prompt strong { color:#8B0000; }
+    .opinion-hint {
+      font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:2px;
+      color:#7a5520; margin-bottom:14px; text-align:right;
+    }
+    #opinion-input {
+      width:100%; min-height:120px;
+      font-family:'Special Elite',cursive; font-size:13.5px;
+      line-height:1.65; color:#1e110a;
+      background:#fffdf5; border:2px solid #c4a468;
+      padding:10px 12px; resize:vertical; margin-bottom:6px;
+    }
+    #opinion-input:focus { outline:none; border-color:#7a3a10; }
+    #opinion-warn {
+      font-size:11px; color:#8B0000; min-height:16px; margin-bottom:10px;
+      font-family:'Oswald',sans-serif; letter-spacing:1px;
+    }
+    .opinion-submit {
+      font-family:'Oswald',sans-serif; font-size:15px; font-weight:700;
+      letter-spacing:3px; text-transform:uppercase;
+      background:#8B0000; color:#f5e6c8; border:3px solid #5a0000;
+      padding:12px 26px; cursor:pointer; transition:all 0.18s; display:block; margin:0 auto;
+    }
+    .opinion-submit:hover { background:#cc0000; transform:translateY(-2px); box-shadow:0 5px 14px rgba(139,0,0,0.45); }
+    /* agent report on win screen */
+    .agent-report {
+      background:rgba(245,228,192,0.07); border:1px solid #7a3a10;
+      border-left:4px solid #8B0000; padding:14px 16px;
+      max-width:520px; margin:16px auto; text-align:left;
+    }
+    .ar-lbl {
+      font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:3px;
+      color:#7a5520; margin-bottom:7px;
+    }
+    .ar-text { font-size:13px; color:#c8a870; line-height:1.7; font-style:italic; }
+
+    /* ═══════════════════════════════════════
+       INTRO SCREEN
+    ═══════════════════════════════════════ */
+    #intro-screen { max-width:680px; margin:0 auto; text-align:center; }
+    .intro-card {
+      background:#f4e4c0; border:2px solid #c4a468;
+      box-shadow:4px 7px 22px rgba(0,0,0,0.5);
+      padding:28px 24px; position:relative;
+    }
+    .intro-card::before { content:''; position:absolute; top:0;left:0;right:0;height:6px;background:#8B0000; }
+    .intro-ts { /* top stamp */
+      display:inline-block;
+      font-family:'Oswald',sans-serif; font-size:10px; font-weight:700;
+      letter-spacing:5px; color:#cc0000; border:2px solid #cc0000;
+      padding:3px 10px; transform:rotate(-2deg); opacity:0.87; margin-bottom:14px;
+    }
+    .intro-title {
+      font-family:'Oswald',sans-serif; font-size:clamp(18px,4vw,28px);
+      text-transform:uppercase; letter-spacing:2px; color:#1e110a; margin-bottom:4px;
+    }
+    .intro-mission-lbl {
+      font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:4px;
+      color:#7a3a10; margin-bottom:18px;
+    }
+    .intro-brief {
+      font-size:13.5px; line-height:1.8; color:#1e110a;
+      text-align:left; background:rgba(255,255,255,0.28);
+      border-left:3px solid #7a3a10; padding:12px 14px; margin-bottom:20px;
+    }
+    .intro-phases {
+      display:flex; flex-wrap:wrap; gap:7px;
+      justify-content:center; margin-bottom:22px;
+    }
+    .chip {
+      background:#1e110a; color:#c8a870;
+      font-family:'Oswald',sans-serif; font-size:10px;
+      padding:4px 11px; letter-spacing:2px; border:1px solid #5a3a1a;
+    }
+    .chip.hi { background:#8B0000; color:#f5e6c8; border-color:#5a0000; }
+    .start-btn {
+      font-family:'Oswald',sans-serif; font-size:17px; font-weight:700;
+      letter-spacing:4px; text-transform:uppercase;
+      background:#8B0000; color:#f5e6c8;
+      border:3px solid #5a0000; padding:13px 30px;
+      cursor:pointer; transition:all 0.18s;
+    }
+    .start-btn:hover { background:#cc0000; transform:translateY(-2px); box-shadow:0 6px 18px rgba(139,0,0,0.5); }
+  </style>
+</head>
+<body>
+
+<!-- SCORE TICKER -->
+<div id="score-ticker">INTEL: <span class="sv" id="score-disp">0</span> pts</div>
+
+<!-- ════════════════════════════
+     INTRO SCREEN
+════════════════════════════ -->
+<div id="intro-screen">
+  <div id="hdr" style="margin-bottom:18px;">
+    <div class="ts-stamp">TOP SECRET</div>
+    <h1>Operation: Dictator Files</h1>
+    <div class="sub">Vocabulary Intelligence Assessment &mdash; WWII Unit</div>
+  </div>
+
+  <div class="intro-card">
+    <div class="intro-ts">CLASSIFIED BRIEFING</div>
+    <div class="intro-title">Agent, Your Mission:</div>
+    <div class="intro-mission-lbl">OPERATION: DICTATOR FILES // PHASE AUTHORIZATION REQUIRED</div>
+    <div class="intro-brief">
+      The year is 1939. The world is about to be torn apart by the deadliest war in history.
+      Our agency has identified three dangerous men who used the chaos of the Great Depression
+      to grab total power over their countries.<br><br>
+      Your mission: <strong>Build secret profile files</strong> on each suspect by correctly
+      identifying key vocabulary words. Get it right and you unlock a new fact on their profile.<br><br>
+      The final phase puts the spotlight on our <strong>Primary Target — Adolf Hitler</strong>.
+      Master all 18 words to complete the dossier.
+    </div>
+    <div class="intro-phases">
+      <div class="chip">📁 PHASE 1: Economic Crisis</div>
+      <div class="chip">📁 PHASE 2: Stalin File</div>
+      <div class="chip">📁 PHASE 3: Mussolini File</div>
+      <div class="chip hi">🎯 PHASE 4: HITLER TARGET</div>
+    </div>
+    <button class="start-btn" onclick="startMission()">▶ BEGIN MISSION</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════
+     GAME SCREEN
+════════════════════════════ -->
+<div id="game-screen" style="display:none;">
+  <div id="hdr">
+    <div class="ts-stamp">TOP SECRET</div>
+    <h1>Operation: Dictator Files</h1>
+    <div class="sub">Vocabulary Intelligence Assessment &mdash; WWII Unit</div>
+  </div>
+
+  <div id="prog-wrap">
+    <div id="prog-lbl">MISSION PROGRESS: <span id="pct-lbl">0%</span></div>
+    <div id="prog-track"><div id="prog-bar"></div></div>
+  </div>
+
+  <div id="phase-banner">
+    <div id="pb-label">PHASE 1 OF 4</div>
+    <div id="pb-title">Evidence File: The Economic Crisis</div>
+  </div>
+
+  <div id="game-cols">
+    <!-- Question Column -->
+    <div id="q-col">
+      <div class="manila" id="q-card">
+        <div class="card-top-row">
+          <div class="card-lbl">🔍 Vocabulary Intelligence Test</div>
+          <div id="q-counter">Question 1 / 4</div>
+        </div>
+        <div id="q-def">Loading...</div>
+        <div id="ans-grid"></div>
+        <div id="feedback"></div>
+        <div id="tally"></div>
+      </div>
+    </div>
+
+    <!-- Profile Column -->
+    <div id="p-col">
+      <div class="manila" id="profile-card">
+        <div class="pc-hdr">
+          <div class="pc-file-lbl">📁 SUSPECT DOSSIER</div>
+          <div id="pc-name">ECONOMIC CONTEXT</div>
+        </div>
+        <div id="photo-wrap">
+          <div class="photo-ph" id="photo-ph">📋</div>
+          <img id="photo-img" src="" alt="" style="display:none;">
+        </div>
+        <ul id="pc-facts"></ul>
+        <div id="pc-slots"></div>
+        <div id="profiled-stamp">SUSPECT<br>PROFILED</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════
+     PHASE COMPLETE SCREEN
+════════════════════════════ -->
+<div id="phase-cmp">
+  <div id="hdr-pcmp" style="text-align:center;margin-bottom:18px;">
+    <div class="ts-stamp">TOP SECRET</div>
+    <h1 style="font-family:'Oswald',sans-serif;font-size:clamp(18px,4vw,32px);color:#f5e6c8;text-shadow:2px 3px 6px rgba(0,0,0,.7);letter-spacing:3px;text-transform:uppercase;">Operation: Dictator Files</h1>
+  </div>
+  <div class="pcmp-card">
+    <div class="pcmp-stamp-text" id="pcmp-stamp">SUSPECT PROFILED</div>
+    <img id="pcmp-photo" src="" alt="" style="display:none;">
+    <div id="pcmp-name">PHASE COMPLETE</div>
+    <div id="pcmp-summary"></div>
+    <button class="next-btn" id="next-btn" onclick="advancePhase()">▶ PROCEED TO NEXT PHASE</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════
+     WIN SCREEN
+════════════════════════════ -->
+<div id="win-screen">
+  <div id="hdr-win" style="text-align:center;margin-bottom:18px;">
+    <div class="ts-stamp">TOP SECRET</div>
+    <h1 style="font-family:'Oswald',sans-serif;font-size:clamp(18px,4vw,32px);color:#f5e6c8;text-shadow:2px 3px 6px rgba(0,0,0,.7);letter-spacing:3px;text-transform:uppercase;">Operation: Dictator Files</h1>
+  </div>
+  <div class="win-card">
+    <div class="win-title">🎖 Mission Complete</div>
+    <div class="win-sub">All suspect dossiers have been fully compiled. Case closed.</div>
+    <div class="win-lbl">FINAL INTELLIGENCE SCORE</div>
+    <div id="win-score-val">0 pts</div>
+    <div id="win-breakdown"></div>
+    <div id="win-stamps">
+      <div class="wstamp">CASE CLOSED</div>
+      <div class="wstamp" style="transform:rotate(4deg);">FILED</div>
+      <div class="wstamp" style="transform:rotate(-2deg);">DECLASSIFIED</div>
+    </div>
+    <div id="win-profiles"></div>
+    <div class="agent-report" id="win-agent-report" style="display:none;">
+      <div class="ar-lbl">📝 AGENT FIELD REPORT — YOUR ASSESSMENT:</div>
+      <div class="ar-text" id="win-ar-text"></div>
+    </div>
+    <div id="win-vocab">
+      <div id="win-vocab-lbl">VOCABULARY DEBRIEFING:</div>
+      <div id="win-vocab-list"></div>
+    </div>
+    <button class="play-again" onclick="location.reload()">↺ RUN MISSION AGAIN</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════
+     RETRY SCREEN
+════════════════════════════ -->
+<div id="retry-screen">
+  <div id="hdr-retry" style="text-align:center;margin-bottom:18px;">
+    <div class="ts-stamp">TOP SECRET</div>
+    <h1 style="font-family:'Oswald',sans-serif;font-size:clamp(18px,4vw,32px);color:#f5e6c8;text-shadow:2px 3px 6px rgba(0,0,0,.7);letter-spacing:3px;text-transform:uppercase;">Operation: Dictator Files</h1>
+  </div>
+  <div class="retry-card">
+    <div class="retry-stamp-txt">CLEARANCE DENIED</div>
+    <div class="retry-title" id="retry-title">Not enough correct answers to advance.</div>
+    <div class="retry-score-line" id="retry-score-line"></div>
+    <div class="retry-missed-lbl">QUESTIONS YOU MISSED:</div>
+    <ul id="retry-missed"></ul>
+    <button class="retry-btn" onclick="retryPhase()">↺ RETRY THIS PHASE</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════
+     OPINION SCREEN
+════════════════════════════ -->
+<div id="opinion-screen">
+  <div id="hdr-opinion" style="text-align:center;margin-bottom:18px;">
+    <div class="ts-stamp">TOP SECRET</div>
+    <h1 style="font-family:'Oswald',sans-serif;font-size:clamp(18px,4vw,32px);color:#f5e6c8;text-shadow:2px 3px 6px rgba(0,0,0,.7);letter-spacing:3px;text-transform:uppercase;">Operation: Dictator Files</h1>
+  </div>
+  <div class="opinion-card">
+    <div style="text-align:center;margin-bottom:14px;">
+      <div class="opinion-top-stamp">FINAL FIELD REPORT</div>
+    </div>
+    <div class="opinion-title">Agent Assessment Required</div>
+    <div class="opinion-prompt">
+      You have now studied the rise of <strong>Stalin</strong>, <strong>Mussolini</strong>, and <strong>Hitler</strong>.<br><br>
+      In your opinion: <strong>Which of these three dictators had the worst impact on the world?</strong><br><br>
+      Use what you learned to explain your answer. Think about things like: how many people suffered, how long their impact lasted, and what they did to gain and keep power.
+    </div>
+    <div class="opinion-hint">YOUR ANSWER WILL BE SAVED TO THE FINAL DOSSIER</div>
+    <textarea id="opinion-input" placeholder="Write your answer here. Use specific examples from the game to support your thinking..."></textarea>
+    <div id="opinion-warn"></div>
+    <button class="opinion-submit" onclick="submitOpinion()">▶ SUBMIT FIELD REPORT</button>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════
+   PHASE / QUESTION DATA
+══════════════════════════════════════════════ */
+const PHASES = [
+  {
+    id: 'econ',
+    pass: 3,
+    label: 'PHASE 1 OF 4',
+    title: 'Evidence File: The Economic Crisis',
+    profileName: 'ECONOMIC CONTEXT',
+    photoWiki: null,
+    pcStamp: 'FILE DECLASSIFIED',
+    pcName: 'THE ECONOMIC CRISIS',
+    pcSummary: 'The Great Depression hit the world hard — businesses failed, banks closed, and millions of people had no jobs and no money. People were scared and desperate. This made it easy for dangerous leaders to rise up by promising simple answers to very complicated problems.',
+    facts: [
+      'After WWI, Germany was forced to pay massive REPARATIONS to the Allied powers.',
+      'Hyperinflation struck Germany — 1 gold mark became 1 trillion paper marks by 1923.',
+      'The 1929 U.S. stock market crash triggered the GREAT DEPRESSION worldwide.',
+      'Nations raised TARIFFS to protect their industries, worsening global trade and deepening the crisis.'
+    ],
+    qs: [
+      {
+        def: 'Money that a country must pay as a punishment after losing a war. After WWI, Germany was forced to pay this to the countries they had fought against.',
+        ans: 'Reparations',
+        wrong: ['Tariffs', 'Inflation', 'Collectivization']
+      },
+      {
+        def: 'When prices for everything keep going up and up, making money worth less and less. In Germany in the 1920s, it got so bad that people needed wheelbarrows full of cash just to buy bread.',
+        ans: 'Inflation',
+        wrong: ['Reparations', 'Great Depression', 'Fascism']
+      },
+      {
+        def: 'A time when the economy crashed worldwide, starting in 1929. Businesses closed, banks failed, and millions of people lost their jobs and their savings.',
+        ans: 'Great Depression',
+        wrong: ['Communism', 'Inflation', 'Nationalism']
+      },
+      {
+        def: 'Extra taxes added to goods bought from other countries. Countries raised these in the 1930s to try to protect their own businesses, but it just made the world economy even worse.',
+        ans: 'Tariffs',
+        wrong: ['Reparations', 'Propaganda', 'Purges']
+      }
+    ]
+  },
+  {
+    id: 'stalin',
+    pass: 3,
+    label: 'PHASE 2 OF 4',
+    title: 'Suspect File: Joseph Stalin',
+    profileName: 'JOSEPH STALIN',
+    photoWiki: 'Joseph_Stalin',
+    pcStamp: 'SUSPECT PROFILED',
+    pcName: 'JOSEPH STALIN',
+    pcSummary: 'Stalin took control of the Soviet Union after Lenin died in 1924. He ruled through fear — anyone who questioned him could be arrested or killed. He forced farmers off their land, had millions of people sent to labor camps, and used a secret police force to keep the whole country too scared to speak out.',
+    facts: [
+      'Stalin ruled the USSR under COMMUNISM — the state owned all property and controlled the economy.',
+      'COLLECTIVIZATION: Stalin seized private farms, forcing peasants to work on government collectives. Millions died.',
+      'The Great Purge — Stalin\'s wave of mass PURGES executed or imprisoned millions, including his own generals.',
+      'The NKVD (secret police) spied on all citizens and crushed any sign of opposition to Stalin\'s rule.'
+    ],
+    qs: [
+      {
+        def: 'A system where the government owns everything — farms, factories, businesses — and is supposed to share wealth equally among all people. Karl Marx and Lenin promoted this idea in Russia.',
+        ans: 'Communism',
+        wrong: ['Fascism', 'Capitalism', 'Nationalism']
+      },
+      {
+        def: 'Stalin forced farmers to give up their own land and work on huge farms owned by the government instead. Millions of people who refused were sent away or killed, and millions more starved.',
+        ans: 'Collectivization',
+        wrong: ['Communism', 'Totalitarianism', 'Militarism']
+      },
+      {
+        def: 'When a leader rounds up and removes people seen as enemies or threats. Stalin had millions of people — including his own generals and party members — arrested, sent to labor camps, or killed.',
+        ans: 'Purges',
+        wrong: ['Tariffs', 'Propaganda', 'Reparations']
+      },
+      {
+        def: 'A hidden force of government spies and agents who watch citizens, arrest anyone who speaks out, and make sure no one dares to oppose the leader. Stalin\'s version was called the NKVD.',
+        ans: 'Secret Police',
+        wrong: ['Collectivization', 'Nationalism', 'Fascism']
+      }
+    ]
+  },
+  {
+    id: 'mussolini',
+    pass: 3,
+    label: 'PHASE 3 OF 4',
+    title: 'Suspect File: Benito Mussolini',
+    profileName: 'BENITO MUSSOLINI',
+    photoWiki: 'Benito_Mussolini',
+    pcStamp: 'SUSPECT PROFILED',
+    pcName: 'BENITO MUSSOLINI',
+    pcSummary: 'Mussolini called himself "Il Duce" — The Leader. He promised Italians he would make their country great again, like the old Roman Empire. He invaded Ethiopia, teamed up with Hitler, and built a government that controlled every part of Italian life. His ideas about extreme nationalism and military power were a huge inspiration to Hitler.',
+    facts: [
+      'Mussolini pioneered FASCISM: extreme nationalism, one-party rule, and total state control.',
+      'He exploited Italian NATIONALISM — promising to restore Rome\'s ancient imperial glory.',
+      'Il Duce glorified MILITARISM: he expanded Italy\'s armed forces and invaded Ethiopia in 1935.',
+      'Mussolini\'s TOTALITARIAN state controlled the press, schools, and all aspects of Italian life.'
+    ],
+    qs: [
+      {
+        def: 'A type of government where one powerful leader controls everything, extreme pride in the country is demanded, and anyone who opposes the government is silenced. Mussolini invented this system in Italy in the 1920s.',
+        ans: 'Fascism',
+        wrong: ['Communism', 'Democracy', 'Capitalism']
+      },
+      {
+        def: 'A very strong belief that your own country is the best and most important. People with this feeling want their country to be powerful and may look down on or even attack other countries.',
+        ans: 'Nationalism',
+        wrong: ['Fascism', 'Militarism', 'Propaganda']
+      },
+      {
+        def: 'The idea that a country should build a huge military and use it to gain power and take over other lands. Italy and Japan both used this thinking to justify invading their neighbors.',
+        ans: 'Militarism',
+        wrong: ['Totalitarianism', 'Nationalism', 'Communism']
+      },
+      {
+        def: 'When a government controls absolutely everything in people\'s lives — what they read, what they learn, what they say, and even what they\'re allowed to think. Citizens have no real rights or freedoms.',
+        ans: 'Totalitarianism',
+        wrong: ['Fascism', 'Purges', 'Collectivization']
+      }
+    ]
+  },
+  {
+    id: 'hitler',
+    pass: 4,
+    label: '⚠ PHASE 4 OF 4 — PRIMARY TARGET',
+    title: '🎯 Primary Target: Adolf Hitler',
+    profileName: 'ADOLF HITLER',
+    photoWiki: 'Adolf_Hitler',
+    pcStamp: 'CASE CLOSED',
+    pcName: 'DOSSIER: COMPLETE',
+    pcSummary: 'Hitler used Germany\'s anger over WWI, the pain of the Great Depression, and hatred of Jewish people to take over the country. Once in power, he started the deadliest war in history and ordered the murder of six million Jewish people in what is called the Holocaust. Learning how he came to power helps us make sure something like this never happens again.',
+    facts: [
+      'Hitler led the NAZI PARTY, exploiting anger over WWI defeat to seize power in Germany by 1933.',
+      'His regime was built on ANTI-SEMITISM — the systematic hatred, persecution, and dehumanization of Jewish people.',
+      'Hitler used SCAPEGOATING: blaming Jewish people for Germany\'s economic problems and military humiliation.',
+      'Nazi ideology promoted the "MASTER RACE" — the false belief in Aryan/Germanic biological superiority.',
+      'THE HOLOCAUST: Hitler\'s regime systematically murdered approximately 6 million Jewish people.',
+      'PROPAGANDA films, rallies, posters, and radio broadcasts manipulated what all Germans thought and felt.'
+    ],
+    qs: [
+      {
+        def: 'Hitler\'s political party that took over Germany in 1933. Its full name was the National Socialist German Workers\' Party. It used anger over WWI to push extreme nationalism and hatred of Jewish people.',
+        ans: 'Nazi Party',
+        wrong: ['Fascism', 'Communism', 'Gestapo']
+      },
+      {
+        def: 'Hate and discrimination against Jewish people. Hitler made this the core of his beliefs, falsely blaming Jewish people for Germany\'s problems and treating them as less than human.',
+        ans: 'Anti-Semitism',
+        wrong: ['Nationalism', 'Propaganda', 'Totalitarianism']
+      },
+      {
+        def: 'Picking one group of people and blaming them for everything that goes wrong — even things that aren\'t their fault. Hitler blamed Jewish people for Germany\'s poverty, unemployment, and loss in WWI.',
+        ans: 'Scapegoating',
+        wrong: ['Anti-Semitism', 'Purges', 'Militarism']
+      },
+      {
+        def: 'Hitler\'s false and evil belief that people from Germany (called "Aryans") were better than all other people and had the right to rule over them. This belief was used to justify terrible violence.',
+        ans: 'Master Race',
+        wrong: ['Nationalism', 'Fascism', 'Totalitarianism']
+      },
+      {
+        def: 'The planned murder of about 6 million Jewish people by the Nazis during WWII. The Nazis also killed Roma, disabled people, and others. It is one of the worst crimes in all of human history.',
+        ans: 'Holocaust',
+        wrong: ['Purges', 'Anti-Semitism', 'Scapegoating']
+      },
+      {
+        def: 'One-sided information designed to make people think or feel a certain way. Hitler used posters, movies, speeches, and rallies to fill Germans with fear and hatred and make them support the Nazi Party.',
+        ans: 'Propaganda',
+        wrong: ['Scapegoating', 'Nationalism', 'Fascism']
+      }
+    ]
+  }
+];
+
+/* ══════════════════════════════════════════════
+   STATE
+══════════════════════════════════════════════ */
+let curPhase = 0;
+let curQ = 0;
+let score = 0;
+let correct = 0;
+let totalAns = 0;
+let answeredPhase = [];   // true/false per question this phase
+let canAns = true;
+let photoCache = {};      // wikiTitle → img src URL
+let scoreAtPhaseStart = 0; // restore score on retry
+let agentOpinion = '';     // stores final open-ended answer
+
+/* ══════════════════════════════════════════════
+   WIKIPEDIA PHOTO
+══════════════════════════════════════════════ */
+function fetchPhoto(wikiTitle, cb) {
+  if (!wikiTitle) return;
+  if (photoCache[wikiTitle]) { cb(photoCache[wikiTitle]); return; }
+  fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(wikiTitle)}`)
+    .then(r => r.json())
+    .then(d => {
+      if (d.thumbnail && d.thumbnail.source) {
+        photoCache[wikiTitle] = d.thumbnail.source;
+        cb(d.thumbnail.source);
+      }
+    })
+    .catch(() => {});
+}
+
+/* ══════════════════════════════════════════════
+   SCREEN SWITCHER
+══════════════════════════════════════════════ */
+function show(id) {
+  ['intro-screen','game-screen','phase-cmp','retry-screen','opinion-screen','win-screen'].forEach(s => {
+    document.getElementById(s).style.display = 'none';
+  });
+  document.getElementById(id).style.display = 'block';
+  window.scrollTo(0, 0);
+}
+
+/* ══════════════════════════════════════════════
+   START
+══════════════════════════════════════════════ */
+function startMission() {
+  show('game-screen');
+  loadPhase(0);
+}
+
+/* ══════════════════════════════════════════════
+   LOAD PHASE
+══════════════════════════════════════════════ */
+function loadPhase(idx) {
+  curPhase = idx;
+  curQ = 0;
+  answeredPhase = [];
+  canAns = true;
+  scoreAtPhaseStart = score;
+
+  const p = PHASES[idx];
+
+  // Phase banner
+  document.getElementById('pb-label').textContent = p.label;
+  document.getElementById('pb-title').textContent = p.title;
+
+  // Profile card reset
+  document.getElementById('pc-name').textContent = p.profileName;
+  document.getElementById('pc-facts').innerHTML = '';
+  document.getElementById('profiled-stamp').classList.remove('on');
+
+  // Photo
+  const img = document.getElementById('photo-img');
+  const ph  = document.getElementById('photo-ph');
+  img.style.display = 'none'; img.src = '';
+  if (p.photoWiki) {
+    ph.textContent = '⏳'; ph.style.display = 'flex';
+    fetchPhoto(p.photoWiki, src => {
+      img.src = src; img.style.display = 'block'; ph.style.display = 'none';
+    });
+  } else {
+    ph.textContent = '📋'; ph.style.display = 'flex';
+  }
+
+  // Empty slots
+  renderSlots(p.qs.length);
+  // Tally
+  document.getElementById('tally').innerHTML = '';
+  // Load first question
+  loadQ(idx, 0);
+  updateProg();
+}
+
+/* ══════════════════════════════════════════════
+   EMPTY SLOTS
+══════════════════════════════════════════════ */
+function renderSlots(n) {
+  const c = document.getElementById('pc-slots');
+  c.innerHTML = '';
+  for (let i = 0; i < n; i++) {
+    const d = document.createElement('div');
+    d.className = 'eslot'; d.id = `eslot-${i}`;
+    c.appendChild(d);
+  }
+}
+
+/* ══════════════════════════════════════════════
+   LOAD QUESTION
+══════════════════════════════════════════════ */
+function loadQ(phIdx, qIdx) {
+  const q = PHASES[phIdx].qs[qIdx];
+  canAns = true;
+
+  document.getElementById('q-counter').textContent =
+    `Question ${qIdx+1} / ${PHASES[phIdx].qs.length}`;
+  document.getElementById('q-def').textContent = q.def;
+
+  const opts = shuffle([q.ans, ...q.wrong]);
+  const grid = document.getElementById('ans-grid');
+  grid.innerHTML = '';
+  opts.forEach(opt => {
+    const b = document.createElement('button');
+    b.className = 'ans-btn';
+    b.textContent = opt;
+    b.onclick = () => handleAns(opt, q.ans, phIdx, qIdx);
+    grid.appendChild(b);
+  });
+
+  const fb = document.getElementById('feedback');
+  fb.className = ''; fb.textContent = '';
+}
+
+/* ══════════════════════════════════════════════
+   HANDLE ANSWER
+══════════════════════════════════════════════ */
+function handleAns(chosen, correct_ans, phIdx, qIdx) {
+  if (!canAns) return;
+  canAns = false;
+  totalAns++;
+
+  const phase = PHASES[phIdx];
+  const isOk = (chosen === correct_ans);
+
+  // Style buttons
+  document.querySelectorAll('.ans-btn').forEach(b => {
+    b.disabled = true;
+    if (b.textContent === correct_ans) b.classList.add('correct');
+    else if (b.textContent === chosen && !isOk) b.classList.add('wrong');
+  });
+
+  const fb = document.getElementById('feedback');
+  if (isOk) {
+    correct++;
+    score += 10;
+    fb.textContent = `✓ Correct! — ${phase.facts[qIdx]}`;
+    fb.className = 'ok';
+    answeredPhase.push(true);
+    addDot(true);
+    setTimeout(() => revealFact(qIdx, phase.facts[qIdx]), 350);
+    setTimeout(() => nextQ(phIdx, qIdx), 2000);
+  } else {
+    score = Math.max(0, score - 2);
+    fb.textContent = `✗ The answer is "${correct_ans}" — ${phase.facts[qIdx]}`;
+    fb.className = 'bad';
+    answeredPhase.push(false);
+    addDot(false);
+    setTimeout(() => revealFact(qIdx, phase.facts[qIdx]), 500);
+    setTimeout(() => nextQ(phIdx, qIdx), 2800);
+  }
+  updateScore();
+  updateProg();
+}
+
+/* ══════════════════════════════════════════════
+   REVEAL FACT
+══════════════════════════════════════════════ */
+function revealFact(qIdx, text) {
+  const slot = document.getElementById(`eslot-${qIdx}`);
+  if (slot) slot.remove();
+
+  const li = document.createElement('li');
+  li.textContent = text;
+  document.getElementById('pc-facts').appendChild(li);
+
+  const card = document.getElementById('profile-card');
+  card.classList.add('pc-pulse');
+  setTimeout(() => card.classList.remove('pc-pulse'), 900);
+}
+
+/* ══════════════════════════════════════════════
+   TALLY DOT
+══════════════════════════════════════════════ */
+function addDot(ok) {
+  const d = document.createElement('div');
+  d.className = `tdot ${ok ? 'c' : 'w'}`;
+  document.getElementById('tally').appendChild(d);
+}
+
+/* ══════════════════════════════════════════════
+   NEXT QUESTION
+══════════════════════════════════════════════ */
+function nextQ(phIdx, qIdx) {
+  const next = qIdx + 1;
+  if (next >= PHASES[phIdx].qs.length) {
+    showPhaseComplete(phIdx);
+  } else {
+    curQ = next;
+    document.getElementById('feedback').className = '';
+    document.getElementById('feedback').textContent = '';
+    loadQ(phIdx, next);
+  }
+  updateProg();
+}
+
+/* ══════════════════════════════════════════════
+   PHASE COMPLETE
+══════════════════════════════════════════════ */
+function showPhaseComplete(phIdx) {
+  const p = PHASES[phIdx];
+  const phaseCorrect = answeredPhase.filter(Boolean).length;
+  const passed = phaseCorrect >= p.pass;
+
+  if (!passed) {
+    // Restore score to what it was at start of phase
+    const earned = score - scoreAtPhaseStart;
+    score = scoreAtPhaseStart;
+    correct -= phaseCorrect;
+    totalAns -= answeredPhase.length;
+    updateScore();
+
+    // Build retry screen
+    document.getElementById('retry-title').textContent =
+      `You needed ${p.pass}/${p.qs.length} correct to advance. You got ${phaseCorrect}/${p.qs.length}.`;
+    document.getElementById('retry-score-line').innerHTML =
+      `You'll need to retry <strong>${p.pcName || p.profileName}</strong>.<br>
+       Study the definitions carefully and try again — you've got this!`;
+
+    // List missed questions
+    const ul = document.getElementById('retry-missed');
+    ul.innerHTML = '';
+    answeredPhase.forEach((wasCorrect, i) => {
+      if (!wasCorrect) {
+        const li = document.createElement('li');
+        li.textContent = `"${p.qs[i].ans}" — ${p.qs[i].def.substring(0, 70)}…`;
+        ul.appendChild(li);
+      }
+    });
+
+    show('retry-screen');
+    return;
+  }
+
+  // PASSED — show stamp then phase complete screen
+  document.getElementById('profiled-stamp').classList.add('on');
+
+  setTimeout(() => {
+    show('phase-cmp');
+    document.getElementById('pcmp-stamp').textContent = p.pcStamp;
+    document.getElementById('pcmp-name').textContent = p.pcName;
+    document.getElementById('pcmp-summary').textContent = p.pcSummary;
+
+    const pcPhoto = document.getElementById('pcmp-photo');
+    const src = photoCache[p.photoWiki];
+    if (src) { pcPhoto.src = src; pcPhoto.style.display = 'block'; }
+    else      { pcPhoto.style.display = 'none'; }
+
+    document.getElementById('next-btn').textContent =
+      (phIdx === PHASES.length - 1) ? '▶ SUBMIT FIELD REPORT' : '▶ PROCEED TO NEXT PHASE';
+
+    updateProg();
+  }, 750);
+}
+
+/* ══════════════════════════════════════════════
+   ADVANCE PHASE
+══════════════════════════════════════════════ */
+function advancePhase() {
+  const next = curPhase + 1;
+  if (next >= PHASES.length) {
+    showOpinionScreen();
+  } else {
+    show('game-screen');
+    loadPhase(next);
+  }
+}
+
+/* ══════════════════════════════════════════════
+   RETRY PHASE
+══════════════════════════════════════════════ */
+function retryPhase() {
+  show('game-screen');
+  loadPhase(curPhase);
+}
+
+/* ══════════════════════════════════════════════
+   OPINION SCREEN
+══════════════════════════════════════════════ */
+function showOpinionScreen() {
+  document.getElementById('opinion-input').value = '';
+  document.getElementById('opinion-warn').textContent = '';
+  show('opinion-screen');
+}
+
+function submitOpinion() {
+  const val = document.getElementById('opinion-input').value.trim();
+  if (val.length < 10) {
+    document.getElementById('opinion-warn').textContent =
+      '⚠ Please write at least a sentence or two before submitting.';
+    return;
+  }
+  agentOpinion = val;
+  showWin();
+}
+
+/* ══════════════════════════════════════════════
+   WIN SCREEN
+══════════════════════════════════════════════ */
+function showWin() {
+  show('win-screen');
+  const totalQ = PHASES.reduce((s, p) => s + p.qs.length, 0);
+  const pct = Math.round(correct / totalQ * 100);
+  const wrong = totalAns - correct;
+
+  document.getElementById('win-score-val').textContent = `${score} pts`;
+
+  document.getElementById('win-breakdown').innerHTML = `
+    <div class="sitem"><div class="sitem-n">${correct}/${totalQ}</div><div class="sitem-l">CORRECT</div></div>
+    <div class="sitem"><div class="sitem-n">${pct}%</div><div class="sitem-l">ACCURACY</div></div>
+    <div class="sitem"><div class="sitem-n">${wrong}</div><div class="sitem-l">WRONG</div></div>
+    <div class="sitem"><div class="sitem-n">${score}</div><div class="sitem-l">INTEL PTS</div></div>
+  `;
+
+  // Profiles row (phases 1-3, skipping phase 0 which is econ context)
+  const row = document.getElementById('win-profiles');
+  row.innerHTML = '';
+  PHASES.slice(1).forEach(p => {
+    const src = photoCache[p.photoWiki];
+    const div = document.createElement('div');
+    div.className = 'wpt';
+    div.innerHTML = src
+      ? `<img src="${src}" alt="${p.profileName}"><div class="wpt-name">${p.profileName}</div><div class="wpt-tag">PROFILED</div>`
+      : `<div class="wpt-ph">👤</div><div class="wpt-name">${p.profileName}</div><div class="wpt-tag">PROFILED</div>`;
+    row.appendChild(div);
+  });
+
+  // Agent opinion / field report
+  const reportEl = document.getElementById('win-agent-report');
+  if (agentOpinion) {
+    reportEl.style.display = 'block';
+    document.getElementById('win-ar-text').textContent = `"${agentOpinion}"`;
+  } else {
+    reportEl.style.display = 'none';
+  }
+
+  // Vocab review
+  let html = '';
+  PHASES.forEach(p => {
+    p.qs.forEach(q => {
+      html += `<div class="vrev-item"><strong>${q.ans}:</strong> ${q.def.substring(0, 85)}…</div>`;
+    });
+  });
+  document.getElementById('win-vocab-list').innerHTML = html;
+}
+
+/* ══════════════════════════════════════════════
+   PROGRESS + SCORE
+══════════════════════════════════════════════ */
+function updateProg() {
+  const totalQ = PHASES.reduce((s, p) => s + p.qs.length, 0);
+  let done = 0;
+  for (let i = 0; i < curPhase; i++) done += PHASES[i].qs.length;
+  done += answeredPhase.length;
+  done = Math.min(done, totalQ);
+  const pct = Math.round(done / totalQ * 100);
+  const bar = document.getElementById('prog-bar');
+  const lbl = document.getElementById('pct-lbl');
+  if (bar) bar.style.width = pct + '%';
+  if (lbl) lbl.textContent = pct + '%';
+}
+
+function updateScore() {
+  document.getElementById('score-disp').textContent = score;
+}
+
+/* ══════════════════════════════════════════════
+   SHUFFLE
+══════════════════════════════════════════════ */
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+</script>
+</body>
+</html>
